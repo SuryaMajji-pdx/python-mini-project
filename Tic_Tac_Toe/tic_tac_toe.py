@@ -12,10 +12,17 @@ Green_color = '#7BC043'
 ==============================================***********=====================================================
     Author                                 changes 
 --------------------------------------------------------------------------------------------------------------
-Surya Majji      Made changes to the code such that it uses the tkinter UI components which makes the game 
-                  more interactive
+Surya Majji     Made changes to the code such that it uses the tkinter UI components which makes the game 
+                more interactive
 
-Surya Majji     implemented the class and method way such that code looks more organised
+Syam Prasad     Changed the logic of playing with computer where the single player will be playing with computer 
+                moves which the code makes decision of the opponents moves which is kind of boring as it will be a 
+                single player game.
+
+Syam Prasad     Implemented a method to identify a game as a tie or win by which player and commented the code much
+                readable by specifying the funtionality of various methods implememted here. 
+
+Surya Majji     Implemented the class and method way such that code looks more organised
 '''
 
 
@@ -85,18 +92,29 @@ class Game:
                                 grid_position[0] + symbol_size, grid_position[1] + symbol_size, width=symbol_thickness,
                                 outline=symbol_O_color)
 
-    #method for drawing X to be implemented by shyam
+    # #method for drawing X to be implemented by shyam
+    def draw_X(self, logical_position):
+        grid_position = self.convert_logical_to_grid_position(logical_position)
+        self.canvas.create_line(grid_position[0] - symbol_size, grid_position[1] - symbol_size,
+                                grid_position[0] + symbol_size, grid_position[1] + symbol_size, width=symbol_thickness,
+                                fill=symbol_X_color)
+        self.canvas.create_line(grid_position[0] - symbol_size, grid_position[1] + symbol_size,
+                                grid_position[0] + symbol_size, grid_position[1] - symbol_size, width=symbol_thickness,
+                                fill=symbol_X_color)
+
     def is_winner(self, player):
         player = -1 if player == 'X' else 1
 
-        # Three in a row
+        # Three in a row or column
         for i in range(3):
+            # checking for three same symbol in a column
             if self.board_status[i][0] == self.board_status[i][1] == self.board_status[i][2] == player:
                 return True
+            # checking for three same symbol in a row
             if self.board_status[0][i] == self.board_status[1][i] == self.board_status[2][i] == player:
                 return True
 
-        # Diagonals
+        # Checking for three same symbols in two Diagonal positions  
         if self.board_status[0][0] == self.board_status[1][1] == self.board_status[2][2] == player:
             return True
 
@@ -135,49 +153,67 @@ class Game:
 
         return gameover
 
-    #Method to display the statistics of wins ands ties
+    # Method to display the statistics of wins ands ties
+    def display_gameover(self):
+
+        if self.X_wins:
+            self.X_score += 1
+            text = 'Winner: Player 1 (X)'
+            color = symbol_X_color
+        elif self.O_wins:
+            self.O_score += 1
+            text = 'Winner: Player 2 (O)'
+            color = symbol_O_color
+        else:
+            self.tie_score += 1
+            text = 'Its a tie'
+            color = 'gray'
+
+        self.canvas.delete("all")
+        self.canvas.create_text(size_of_board / 2, size_of_board / 3, font="cmr 40 bold", fill=color, text=text)
+
+        score_text = 'Scores \n'
+        self.canvas.create_text(size_of_board / 2, 5 * size_of_board / 8, font="cmr 30 bold", fill=Green_color,
+                                text=score_text)
+
+        score_text = 'Player 1 (X)   : ' + str(self.X_score) + '\n'
+        score_text += 'Player 2 (O)  : ' + str(self.O_score) + '\n'
+        score_text += 'Tie                : ' + str(self.tie_score)
+        self.canvas.create_text(size_of_board / 2, 3 * size_of_board / 4, font="cmr 20 bold", fill=Green_color,
+                                text=score_text)
+        self.reset_board = True
+
+        score_text = 'Click to play again \n'
+        self.canvas.create_text(size_of_board / 2, 15 * size_of_board / 16, font="cmr 20 bold", fill="gray",
+                                text=score_text)
+
+    # logic to action when clicked on the grid 
+    def click(self, event):
+        grid_position = [event.x, event.y]
+        logical_position = self.convert_grid_to_logical_position(grid_position)
+
+        if not self.reset_board:
+            if self.player_X_turns:
+                if not self.is_grid_occupied(logical_position):
+                    self.draw_X(logical_position)
+                    self.board_status[logical_position[0]][logical_position[1]] = -1
+                    self.player_X_turns = not self.player_X_turns
+            else:
+                if not self.is_grid_occupied(logical_position):
+                    self.draw_O(logical_position)
+                    self.board_status[logical_position[0]][logical_position[1]] = 1
+                    self.player_X_turns = not self.player_X_turns
+
+            # Check if game is concluded
+            if self.is_gameover:
+                self.display_gameover()
+                # print('Done')
+        else:  # Play Again
+            self.canvas.delete("all")
+            self.play_again()
+            self.reset_board = False
+
 
 if __name__ == "__main__":
     game_instance = Game()
     game_instance.mainloop()
-
-#
-# def computerMove():
-#     possibleMoves = [ x for x, letter in enumerate(board) if letter == ' ' and x != 0]
-#     move = 0
-#
-#     for let in ['O', 'X']:
-#         for i in possibleMoves:
-#             boardcopy = board[:]
-#             boardcopy[i] = let
-#             if IsWinner(boardcopy, let):
-#                 move = i
-#                 return move
-#
-#     cornersOpen = []
-#     for i in possibleMoves:
-#         if i in [1, 3, 7, 9]:
-#             cornersOpen.append(i)
-#
-#     if len(cornersOpen) > 0:
-#         move = selectRandom(cornersOpen)
-#         return move
-#
-#     if 5 in possibleMoves:
-#         move = 5
-#         return move
-#
-#     edgesOpen = []
-#     for i in possibleMoves:
-#         if i in [2, 4, 6, 8]:
-#             edgesOpen.append(i)
-#
-#     if len(edgesOpen) > 0:
-#         move = selectRandom(edgesOpen)
-#         return move
-#
-# def selectRandom(li):
-#     import random
-#     ln = len(li)
-#     r = random.randrange(0, ln)
-#     return li[r]
