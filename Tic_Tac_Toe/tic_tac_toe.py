@@ -1,134 +1,183 @@
-board = [' ' for x in range(10)]
+from tkinter import *
+import numpy as np
 
-def insertLetter(letter,pos):
-    board[pos] = letter
+size_of_board = 600
+symbol_size = (size_of_board / 3 - size_of_board / 8) / 2
+symbol_thickness = 50
+symbol_X_color = '#EE4035'
+symbol_O_color = '#0492CF'
+Green_color = '#7BC043'
 
-def spaceIsFree(pos):
-    return board[pos] == ' '
+'''
+==============================================***********=====================================================
+    Author                                 changes 
+--------------------------------------------------------------------------------------------------------------
+Surya Majji      Made changes to the code such that it uses the tkinter UI components which makes the game 
+                  more interactive
 
-def printBoard(board):
-    print('   |   |   ')
-    print(' ' + board[1] + ' | ' + board[2] + ' | ' + board[3])
-    print('   |   |   ')
-    print('------------')
-    print('   |   |   ')
-    print(' ' + board[4] + ' | ' + board[5] + ' | ' + board[6])
-    print('   |   |   ')
-    print('------------')
-    print('   |   |   ')
-    print(' ' + board[7] + ' | ' + board[8] + ' | ' + board[9])
-    print('   |   |   ')
+Surya Majji     implemented the class and method way such that code looks more organised
+'''
 
-def isBoardFull(board):
-    if board.count(' ') > 1:
+
+class Game:
+    def initialize_board(self):
+        for i in range(2):
+            self.canvas.create_line((i + 1) * size_of_board / 3, 0, (i + 1) * size_of_board / 3, size_of_board)
+
+        for i in range(2):
+            self.canvas.create_line(0, (i + 1) * size_of_board / 3, size_of_board, (i + 1) * size_of_board / 3)
+
+    def __init__(self):
+        self.window = Tk()
+        self.window.title('Tic-Tac-Toe')
+        self.canvas = Canvas(self.window, width=size_of_board, height=size_of_board)
+        self.canvas.pack()
+        # Input from user in form of clicks
+        self.window.bind('<Button-1>', self.click)
+
+        self.initialize_board()
+        self.player_X_turns = True
+        self.board_status = np.zeros(shape=(3, 3))
+
+        self.player_X_starts = True
+        self.reset_board = False
+        self.game_over = False
+        self.tie = False
+        self.X_wins = False
+        self.O_wins = False
+
+        self.X_score = 0
+        self.O_score = 0
+        self.tie_score = 0
+
+    def mainloop(self):
+        self.window.mainloop()
+
+    def play_again(self):
+        self.initialize_board()
+        self.player_X_starts = not self.player_X_starts
+        self.player_X_turns = self.player_X_starts
+        self.board_status = np.zeros(shape=(3, 3))
+
+    def convert_logical_to_grid_position(self, logical_position):
+        logical_position = np.array(logical_position, dtype=int)
+        return (size_of_board / 3) * logical_position + size_of_board / 6
+
+    def convert_grid_to_logical_position(self, grid_position):
+        grid_position = np.array(grid_position)
+        return np.array(grid_position // (size_of_board / 3), dtype=int)
+
+    # equivalent to is boardFUll method check for if the board has some empty spaces
+    def is_grid_occupied(self, logical_position):
+        if self.board_status[logical_position[0]][logical_position[1]] == 0:
+            return False
+        else:
+            return True
+
+    # created two different methods to insert two different signs of the players as this uses tkinter UI
+
+    def draw_O(self, logical_position):
+        logical_position = np.array(logical_position)
+        # logical_position = grid value on the board
+        # grid_position = actual pixel values of the center of the grid
+        grid_position = self.convert_logical_to_grid_position(logical_position)
+        self.canvas.create_oval(grid_position[0] - symbol_size, grid_position[1] - symbol_size,
+                                grid_position[0] + symbol_size, grid_position[1] + symbol_size, width=symbol_thickness,
+                                outline=symbol_O_color)
+
+    #method for drawing X to be implemented by shyam
+    def is_winner(self, player):
+        player = -1 if player == 'X' else 1
+
+        # Three in a row
+        for i in range(3):
+            if self.board_status[i][0] == self.board_status[i][1] == self.board_status[i][2] == player:
+                return True
+            if self.board_status[0][i] == self.board_status[1][i] == self.board_status[2][i] == player:
+                return True
+
+        # Diagonals
+        if self.board_status[0][0] == self.board_status[1][1] == self.board_status[2][2] == player:
+            return True
+
+        if self.board_status[0][2] == self.board_status[1][1] == self.board_status[2][0] == player:
+            return True
+
         return False
-    else:
-        return True
 
-def IsWinner(b,l):
-    return(
-    (b[1] == l and b[2] == l and b[3] == l) or
-    (b[4] == l and b[5] == l and b[6] == l) or
-    (b[7] == l and b[8] == l and b[9] == l) or
-    (b[1] == l and b[4] == l and b[7] == l) or
-    (b[2] == l and b[5] == l and b[8] == l) or
-    (b[3] == l and b[6] == l and b[9] == l) or
-    (b[1] == l and b[5] == l and b[9] == l) or
-    (b[3] == l and b[5] == l and b[7] == l)
-    )
+    def is_tie(self):
 
-def playerMove():
-    run = True
-    while run:
-        move = input("please select a position to enter the X between 1 to 9: ")
-        try:
-            move = int(move)
-            if move > 0 and move < 10:
-                if spaceIsFree(move):
-                    run = False
-                    insertLetter('X', move)
-                else:
-                    print('Sorry, this space is occupied')
-            else:
-                print('please type a number between 1 and 9')
-        
-        except:
-            print('Please type a number')
+        r, c = np.where(self.board_status == 0)
+        tie = False
+        if len(r) == 0:
+            tie = True
 
-def computerMove():
-    possibleMoves = [ x for x, letter in enumerate(board) if letter == ' ' and x != 0]
-    move = 0
+        return tie
 
-    for let in ['O', 'X']:
-        for i in possibleMoves:
-            boardcopy = board[:]
-            boardcopy[i] = let
-            if IsWinner(boardcopy, let):
-                move = i
-                return move
+    @property
+    def is_gameover(self):
+        # Either someone wins or all grid occupied
+        self.X_wins = self.is_winner('X')
+        if not self.X_wins:
+            self.O_wins = self.is_winner('O')
 
-    cornersOpen = []
-    for i in possibleMoves:
-        if i in [1, 3, 7, 9]:
-            cornersOpen.append(i)
+        if not self.O_wins:
+            self.tie = self.is_tie()
 
-    if len(cornersOpen) > 0:
-        move = selectRandom(cornersOpen)
-        return move
+        gameover = self.X_wins or self.O_wins or self.tie
 
-    if 5 in possibleMoves:
-        move = 5
-        return move
+        if self.X_wins:
+            print('X wins')
+        if self.O_wins:
+            print('O wins')
+        if self.tie:
+            print('Its a tie')
 
-    edgesOpen = []
-    for i in possibleMoves:
-        if i in [2, 4, 6, 8]:
-            edgesOpen.append(i)
+        return gameover
 
-    if len(edgesOpen) > 0:
-        move = selectRandom(edgesOpen)
-        return move
+    #Method to display the statistics of wins ands ties
 
-def selectRandom(li):
-    import random
-    ln = len(li)
-    r = random.randrange(0, ln)
-    return li[r]
+if __name__ == "__main__":
+    game_instance = Game()
+    game_instance.mainloop()
 
-def main():
-    print("Welcome to the game!")
-    printBoard(board)
-
-    while not(isBoardFull(board)):
-        if not(IsWinner(board, 'O')):
-            playerMove()
-            printBoard(board)
-        else:
-            print("sorry you loose!")
-            break
-
-        if not(IsWinner(board, 'X')):
-            move = computerMove()
-            if move == 0:
-                print(" ")
-            else:
-                insertLetter('O', move)
-                print('computer placed an o on position', move, ':')
-                printBoard(board)
-        else:
-            print("you win!")
-            break
-
-
-
-    if isBoardFull(board):
-        print("Tie game")
-
-while True:
-    x = input("Do you want to play again? (y/n)")
-    if x.lower() == 'y':
-        board = [' ' for x in range(10)]
-        print('-------------------')
-        main()
-    else:
-        break
+#
+# def computerMove():
+#     possibleMoves = [ x for x, letter in enumerate(board) if letter == ' ' and x != 0]
+#     move = 0
+#
+#     for let in ['O', 'X']:
+#         for i in possibleMoves:
+#             boardcopy = board[:]
+#             boardcopy[i] = let
+#             if IsWinner(boardcopy, let):
+#                 move = i
+#                 return move
+#
+#     cornersOpen = []
+#     for i in possibleMoves:
+#         if i in [1, 3, 7, 9]:
+#             cornersOpen.append(i)
+#
+#     if len(cornersOpen) > 0:
+#         move = selectRandom(cornersOpen)
+#         return move
+#
+#     if 5 in possibleMoves:
+#         move = 5
+#         return move
+#
+#     edgesOpen = []
+#     for i in possibleMoves:
+#         if i in [2, 4, 6, 8]:
+#             edgesOpen.append(i)
+#
+#     if len(edgesOpen) > 0:
+#         move = selectRandom(edgesOpen)
+#         return move
+#
+# def selectRandom(li):
+#     import random
+#     ln = len(li)
+#     r = random.randrange(0, ln)
+#     return li[r]
