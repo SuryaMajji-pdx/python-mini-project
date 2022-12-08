@@ -27,8 +27,8 @@ python tic_tac_toe.py
 ## 📺 Demo
 
 <p align="center">
-<img src="https://github.com/SuryaMajji-pdx/python-mini-project/blob/d405f6960982e70fa1931bde9120ab46520e3790/IMG/tictactoe_start.jpg" width=70% height=70%>
-<img src="https://github.com/SuryaMajji-pdx/python-mini-project/blob/d405f6960982e70fa1931bde9120ab46520e3790/IMG/tictactoe_results.jpg" width=70% height=70%>
+<img src="https://github.com/SuryaMajji-pdx/python-mini-project/blob/main/IMG/tictactoe_start.jpg" width=70% height=70%>
+<img src="https://github.com/SuryaMajji-pdx/python-mini-project/blob/main/IMG/tictactoe_results.jpg" width=70% height=70%>
 
 ## 🤖 Author
 
